@@ -1,0 +1,130 @@
+---
+category:
+  shop_by_price: true
+  products:
+    limit: { { theme_settings.categorypage_products_per_page } }
+---
+
+{{inject "currentProduct" products}} {{inject "categoryProductsPerPage"
+theme_settings.categorypage_products_per_page}} {{inject "categoryId"
+category.id}} {{#partial "head"}} {{#if pagination.category.previous}}
+<link rel="prev" href="{{pagination.category.previous}}" />
+{{/if}} {{#if pagination.category.next}}
+<link rel="next" href="{{pagination.category.next}}" />
+{{/if}} {{/partial}} {{#partial "page"}} {{> components/common/breadcrumbs
+breadcrumbs=breadcrumbs}} {{#if category.image}} {{>
+components/common/responsive-img image=category.image
+fallback_size=theme_settings.zoom_size lazyload=theme_settings.lazyload_mode
+class="category-header-image" }} {{/if}}
+<div>
+  <div class="category-header-user-info">
+    <div>Hey {{customer.name}}!</div>
+    {{#if customer.email}}
+    <div>Your current email is: {{customer.email}}</div>
+    {{/if}} {{#if customer.phone}}
+    <div>and your phone is: {{customer.phone}}</div>
+    {{/if}}
+  </div>
+  <div id="special_item_cart" class="category-bulk-buttons">
+    <!-- Button that says Add All To Cart that when clicked, button will add product to cart. -->
+    <button
+      class="button--primary"
+      onclick="addAllToCart()"
+      id="add-to-cart-button"
+    >
+      Add All To Cart
+    </button>
+    <!-- If cart has items in it, show button that says Remove All Items that when clicked will empty the cart. -->
+    {{#if cart_id}}
+    <button
+      class="button--primary"
+      onclick="emptyCart()"
+      id="empty-cart-button"
+    >
+      Empty Cart
+    </button>
+    {{/if}}
+  </div>
+  {{#unless theme_settings.hide_category_page_heading }}
+  <h1 class="page-heading">{{category.name}}</h1>
+  {{{region name="category_below_header"}}} {{/unless}}
+  {{{category.description}}}
+  <div class="page">
+    {{#if category.faceted_search_enabled}}
+    <aside class="page-sidebar" id="faceted-search-container">
+      {{> components/category/sidebar}}
+    </aside>
+    {{else if category.subcategories}}
+    <aside class="page-sidebar" id="faceted-search-container">
+      {{> components/category/sidebar}}
+    </aside>
+    {{else if category.shop_by_price}} {{#if
+    theme_settings.shop_by_price_visibility}}
+    <aside class="page-sidebar" id="faceted-search-container">
+      {{> components/category/sidebar}}
+    </aside>
+    {{/if}} {{/if}}
+
+    <div class="page-content" id="product-listing-container">
+      {{> components/category/product-listing}} {{{region
+      name="category_below_content"}}}
+    </div>
+  </div>
+
+  {{/partial}} {{> layout/base}} {{inject "currentCategory" category}} {{inject
+  "cartId" cart_id}} {{#each this}} {{log @key this}} {{/each}}
+  <script>
+    var jsContext = JSON.parse({{jsContext}});
+    function addAllToCart() {
+      fetch(jsContext.currentCategory.products[0].add_to_cart_url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: jsContext.currentCategory.products[0].id,
+          quantity: "1",
+        }),
+      });
+      if (!document.getElementById("empty-cart-button")) {
+        const emptyCartButton = document.createElement("button");
+        emptyCartButton.innerText = "Empty Cart";
+        emptyCartButton.className = "button--primary";
+        emptyCartButton.id = "empty-cart-button";
+        emptyCartButton.onclick = "emptyCart()";
+        document.getElementById("special_item_cart").appendChild(emptyCartButton);
+      };
+      const addToCartButton = document.getElementById("add-to-cart-button");
+      addToCartButton.innerText = "Added to cart!";
+      addToCartButton.style.backgroundColor = "green";
+      setTimeout(() => {
+        addToCartButton.innerText = "Add All To Cart";
+        addToCartButton.style.backgroundColor = "#444444";
+      }, 3000);
+    };
+    // https://%7Bstore_domain%7D/api/storefront/carts
+
+    async function emptyCart() {
+      // /api/storefront/carts/
+      const cart = await (await fetch(`https://tacit.mybigcommerce.com/api/storefront/carts`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })).json();
+      fetch(`https://tacit.mybigcommerce.com/api/storefront/carts/${cart[0].id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const emptyCartButton = document.getElementById("empty-cart-button");
+      emptyCartButton.innerText = "Cart emptied!";
+      emptyCartButton.style.backgroundColor = "red";
+      setTimeout(() => {
+        emptyCartButton.innerText = "Empty Cart";
+        emptyCartButton.style.backgroundColor = "#444444";
+      }, 3000);
+    };
+  </script>
+</div>
