@@ -17,6 +17,7 @@ components/common/responsive-img image=category.image
 fallback_size=theme_settings.zoom_size lazyload=theme_settings.lazyload_mode
 class="category-header-image" }} {{/if}}
 <div>
+  {{#if customer}}
   <div class="category-header-user-info">
     <div>Hey {{customer.name}}!</div>
     {{#if customer.email}}
@@ -25,6 +26,7 @@ class="category-header-image" }} {{/if}}
     <div>and your phone is: {{customer.phone}}</div>
     {{/if}}
   </div>
+  {{/if}}
   <div id="special_item_cart" class="category-bulk-buttons">
     <!-- Button that says Add All To Cart that when clicked, button will add product to cart. -->
     <button
